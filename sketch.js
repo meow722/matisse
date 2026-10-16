@@ -1,8 +1,7 @@
 // =====================================================================
-//  《舞蹈 · Dance》— 起始文件 / starter
-//  PART A（下面）是身体姿态引擎，不要修改。/ PART A (below) is the pose engine: don't change it.
-//  PART B 只留下 5 个 ★ 标记的函数：每一步让 Qwen 改写其中一个。
-//  PART B leaves 5 functions marked with ★: at each step, Qwen rewrites one of them.
+//  《舞蹈 · Dance》— 完成版 / finished
+//  PART A：身体姿态引擎 / pose engine · PART B：作品 / artwork
+//  5 个 ===== 标记的函数就是 5 个步骤的答案 / the 5 functions marked ===== are the answers to the 5 steps
 // =====================================================================
 
 
@@ -244,51 +243,97 @@ function figureWidth(pose) {
   return max(dist(pose[11].x, pose[11].y, pose[12].x, pose[12].y) * 0.35, 12);
 }
 
-// ★★★★★★ 第 1 步 开始 / STEP 1 START：drawLimb（把整个函数换成 Qwen 写的版本 / replace the whole function with Qwen's version）★★★★★★
+// ===== 第 1 步 / STEP 1：drawLimb（完成版 / finished）=====
+// 一段肢体：一条很粗、两头圆圆的朱红色线，就像剪下来的彩纸
 function drawLimb(a, b, w) {
-  // 临时版本：一条细细的白线 / placeholder: a thin white line
   if (!isVisible(a) || !isVisible(b)) return;
-  stroke(255);
-  strokeWeight(2);
+  stroke(RED);
+  strokeWeight(w);
+  strokeCap(ROUND);
   line(a.x, a.y, b.x, b.y);
+  noStroke();
+  fill(RED);
+  circle(b.x, b.y, w * 1.1);
 }
-// ★★★★★★ 第 1 步 结束 / STEP 1 END ★★★★★★
+// ===== 第 1 步 结束 / STEP 1 END =====
 
-// ★★★★★★ 第 2 步 开始 / STEP 2 START：drawFigure（把整个函数换成 Qwen 写的版本 / replace the whole function with Qwen's version）★★★★★★
+// ===== 第 2 步 / STEP 2：drawFigure（完成版 / finished）=====
+// 一个舞者：躯干、头、脖子和四肢 / one dancer: torso, head, neck and limbs
 function drawFigure(pose, w) {
-  // 临时版本：只画手臂 / placeholder: only the arms
+  const ls = pose[11], rs = pose[12], lh = pose[23], rh = pose[24], nose = pose[0];
+  noStroke();
+  fill(RED);
+  if (isVisible(ls) && isVisible(rs) && isVisible(lh) && isVisible(rh)) {
+    quad(ls.x, ls.y, rs.x, rs.y, rh.x, rh.y, lh.x, lh.y);
+  }
+  if (isVisible(nose)) {
+    circle(nose.x, nose.y, w * 1.8);
+    if (isVisible(ls) && isVisible(rs)) {
+      drawLimb({ x: (ls.x + rs.x) / 2, y: (ls.y + rs.y) / 2, visibility: 1 }, nose, w * 0.8);
+    }
+  }
   drawLimb(pose[11], pose[13], w);
-  drawLimb(pose[13], pose[15], w);
+  drawLimb(pose[13], pose[15], w * 0.8);
   drawLimb(pose[12], pose[14], w);
-  drawLimb(pose[14], pose[16], w);
+  drawLimb(pose[14], pose[16], w * 0.8);
+  drawLimb(pose[23], pose[25], w * 1.2);
+  drawLimb(pose[25], pose[27], w);
+  drawLimb(pose[24], pose[26], w * 1.2);
+  drawLimb(pose[26], pose[28], w);
 }
-// ★★★★★★ 第 2 步 结束 / STEP 2 END ★★★★★★
+// ===== 第 2 步 结束 / STEP 2 END =====
 
-// ★★★★★★ 第 3 步 开始 / STEP 3 START：gouacheShader（把整个函数换成 Qwen 写的版本 / replace the whole function with Qwen's version）★★★★★★
+// ===== 第 3 步 / STEP 3：gouacheShader（完成版 / finished）=====
+// 水粉纸张着色器（GLSL）：边缘轻轻抖动，纸张颗粒，四周暗一点
 function gouacheShader() {
-  // 临时版本：什么都不改变的着色器 / placeholder: a shader that changes nothing
   return `precision mediump float;
 varying vec2 vTexCoord;
 uniform sampler2D tex0;
 uniform float uTime;
+
+float rand(vec2 p) {
+  return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+}
+
 void main() {
-  gl_FragColor = texture2D(tex0, vTexCoord);
+  vec2 uv = vTexCoord;
+  uv.x += sin(uv.y * 40.0 + uTime * 0.5) * 0.002;
+  uv.y += cos(uv.x * 40.0 + uTime * 0.5) * 0.002;
+  vec4 col = texture2D(tex0, uv);
+  float grain = rand(floor(vTexCoord * 400.0)) * 0.08 - 0.04;
+  col.rgb += grain;
+  float d = distance(vTexCoord, vec2(0.5));
+  col.rgb *= 1.0 - d * 0.5;
+  gl_FragColor = vec4(col.rgb, 1.0);
 }`;
 }
-// ★★★★★★ 第 3 步 结束 / STEP 3 END ★★★★★★
+// ===== 第 3 步 结束 / STEP 3 END =====
 
-// ★★★★★★ 第 4 步 开始 / STEP 4 START：drawEchoes（把整个函数换成 Qwen 写的版本 / replace the whole function with Qwen's version）★★★★★★
+// ===== 第 4 步 / STEP 4：drawEchoes（完成版 / finished）=====
+// 回声舞者：4 个舞者跟着你跳，但是晚一点点，单数的左右相反，就像马蒂斯画里围成一圈的舞者
 function drawEchoes(history) {
-  // 临时版本：还没有回声舞者 / placeholder: no echo dancers yet
+  const offsets = [-0.36, -0.18, 0.18, 0.36];
+  for (let k = 1; k <= 4; k++) {
+    const i = history.length - 1 - k * 8;
+    if (i < 0) continue;
+    const pose = history[i];
+    push();
+    translate(width / 2 + offsets[k - 1] * width, 0);
+    if (k % 2 === 1) scale(-1, 1);
+    translate(-width / 2, 0);
+    drawFigure(pose, figureWidth(pose) * 0.8);
+    pop();
+  }
 }
-// ★★★★★★ 第 4 步 结束 / STEP 4 END ★★★★★★
+// ===== 第 4 步 结束 / STEP 4 END =====
 
-// ★★★★★★ 第 5 步 开始 / STEP 5 START：wristToNote（把整个函数换成 Qwen 写的版本 / replace the whole function with Qwen's version）★★★★★★
+// ===== 第 5 步 / STEP 5：wristToNote（完成版 / finished）=====
+// 手腕的高度 → 五声音阶里的一个音：越高音越高
 function wristToNote(y) {
-  // 临时版本：永远是同一个音 / placeholder: always the same note
-  return 67;
+  const i = floor(map(y, height, 0, 0, HARP.length - 0.001, true));
+  return HARP[i];
 }
-// ★★★★★★ 第 5 步 结束 / STEP 5 END ★★★★★★
+// ===== 第 5 步 结束 / STEP 5 END =====
 
 // ---------- 下面这些已经写好了，不需要改 / already written, no need to change ----------
 
